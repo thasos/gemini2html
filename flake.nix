@@ -1,0 +1,30 @@
+{
+  description = "gemini2html";
+  outputs = { self, nixpkgs, flake-utils }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+        overrides = (builtins.fromTOML (builtins.readFile ./rust-toolchain.toml));
+      in
+      {
+        devShell = pkgs.mkShell {
+          buildInputs = [
+            # in case of following error message :
+            # `error: command failed: 'cargo': No such file or directory (os error 2)`
+            # just run `rustup update`
+            pkgs.rustup pkgs.cargo pkgs.rustc pkgs.gcc # rust dev base
+            pkgs.rust-analyzer pkgs.clippy # rust code quality
+            pkgs.clang # C compiler
+            pkgs.cargo-insta # snapshot testing
+            pkgs.cargo-outdated
+          ];
+          RUSTC_VERSION = overrides.toolchain.channel;
+          RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
+          shellHook = ''
+            export PATH=$PATH:''${CARGO_HOME:-~/.cargo}/bin
+            export PATH=$PATH:''${RUSTUP_HOME:-~/.rustup}/toolchains/$RUSTC_VERSION-x86_64-unknown-linux-gnu/bin/
+            export CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER="clang"
+          '';
+        };
+      });
+}

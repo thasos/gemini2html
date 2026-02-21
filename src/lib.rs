@@ -1,7 +1,7 @@
 use log::{debug, error, info};
 use std::fmt;
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read, Write};
 use std::path::Path;
 
 /// Error handling, I should rework this awfull part...
@@ -109,7 +109,7 @@ fn html_link(link: &str) -> String {
     }
 }
 
-/// Standard read
+/// Standard read file
 fn read_from_file(path: &Path) -> Result<String> {
     debug!("💨 open file {:?}", path);
     let mut file = File::open(path).map_err(|e| {
@@ -125,6 +125,20 @@ fn read_from_file(path: &Path) -> Result<String> {
         Gemini2HtmlError
     })?;
     Ok(file_content)
+}
+
+/// Standard write to file
+fn write_to_file(path: &Path, content: &str) -> Result<()> {
+    let mut file = File::create(path).map_err(|e| {
+        error!("unable to open file {} : {e:?}", path.to_string_lossy());
+        Gemini2HtmlError
+    })?;
+    // TODO handle result
+    file.write_all(content.as_bytes()).map_err(|e| {
+        error!("unable to write to file {} : {e:?}", path.to_string_lossy());
+        Gemini2HtmlError
+    })?;
+    Ok(())
 }
 
 /// Main course here, read a gemini content line by line
@@ -193,12 +207,15 @@ fn parse_gemini(gemini_content: &str) -> Vec<ParsedGemini> {
 /// Eat parsed gemini Vec, and create a formatted html page
 fn format_gemini_to_html(parsed_gemini: Vec<ParsedGemini>) -> String {
     let mut html_content = String::new();
+    // init html main tags
     let headers = html_headers(None);
     let footers = html_footers("some infos");
+    // let's construct html document
     html_content.push_str(&headers);
+    // insert gemini element formatted to html
     for line in parsed_gemini {
-        // TODO insert line feed in `to_html` directy...
         html_content.push_str(&line.to_html());
+        // insert line feed between each elemets
         html_content.push('\n');
     }
     html_content.push_str(&footers);
@@ -206,18 +223,20 @@ fn format_gemini_to_html(parsed_gemini: Vec<ParsedGemini>) -> String {
 }
 
 /// Read file, pass content to the parser, and write the output to the target file
-// TODO write to file
-pub fn parse_gemini_file(gemini_file_path: &Path) {
+pub fn convert_gemini_file(gemini_file_path: &Path, target_file: &Path) -> Result<()> {
     match read_from_file(gemini_file_path) {
         Ok(gemini_file_content) => {
-            info!("🍽️  start parse file {:?}", gemini_file_path);
+            info!("🗃  start file {:?}", gemini_file_path);
             let parsed_gemini = parse_gemini(&gemini_file_content);
+            info!("- 🍽️  parsed");
             let html_content = format_gemini_to_html(parsed_gemini);
-            println!("{html_content}");
-            info!("🏁 end parse file {:?}", gemini_file_path);
+            info!("- 🎨 converted to html");
+            write_to_file(target_file, &html_content)?;
+            info!("- 🪦 html saved to file {:?}", target_file);
         }
         Err(e) => error!("{}", e),
     }
+    Ok(())
 }
 
 #[cfg(test)]

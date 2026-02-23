@@ -54,10 +54,26 @@ impl ParsedGemini {
 /// Return html headers, the title of the page should be known
 fn html_headers(title: Option<&str>) -> String {
     let title = title.unwrap_or("some title");
+    let css = html_style();
     format!(
-        "<!doctype html>\n<html>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n<title>{}</title>\n<body>\n",
-        title
+        "<!doctype html>\n<html>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n{}\n<title>{}</title>\n<body>\n",
+        css, title
     )
+}
+
+/// Read css file and put it in `style` tags
+fn html_style() -> String {
+    // let css_path = Path::new("style.css");
+    // let css = fs::read_to_string(css_path).expect("unable to read file in ./output_tests");
+    let css = include_bytes!("style.css");
+    let css = match std::str::from_utf8(css) {
+        Ok(css) => css.to_string(),
+        Err(e) => {
+            error!("unable to find css file {:?}", e);
+            String::from("")
+        }
+    };
+    format!("<style>\n{css}</style>")
 }
 
 /// Return html footer and closing tags, we can pass some infos here
@@ -86,8 +102,11 @@ fn html_link(link: &str) -> String {
     };
     // handle image
     // TODO no `<br \>` here, use css...
-    let image_format =
-        format!("<a href=\"{url}\"><img src=\"{url}\" alt=\"{description}\" /></a><br />");
+    let image_html_options = r#"loading="lazy" height="200" sizes="auto, (max-width: 30em) 100vw, (max-width: 50em) 50vw, calc(33vw - 100px)""#;
+    // let image_html_options = r#"loading="lazy" width="200" height="200" sizes="auto, (max-width: 30em) 100vw, (max-width: 50em) 50vw, calc(33vw - 100px)""#;
+    let image_format = format!(
+        "<a href=\"{url}\"><img {image_html_options} src=\"{url}\" alt=\"{description}\" /></a><br />"
+    );
     let standard_link_format = format!("<a href=\"{url}\">{description}</a><br />");
     // try to match a known image extension
     // TODO downcase
@@ -256,7 +275,7 @@ mod tests {
         let headers = html_headers(Some("A cool title 🪻"));
         assert_eq!(
             headers,
-            "<!doctype html>\n<html>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n<title>A cool title 🪻</title>\n<body>\n"
+            "<!doctype html>\n<html>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n<style>\nhtml {\n\tfont-family: sans-serif;\n\tcolor: #080808;\n}\n\nbody {\n\tmax-width: 920px;\n\tmargin: 0 auto;\n\tpadding: 1rem 2rem;\n}\n\nblockquote {\n\tbackground-color: #eee;\n\tborder-left: 3px solid #444;\n\tmargin: 1rem -1rem 1rem calc(-1rem - 3px);\n\tpadding: 1rem;\n}\n\nul {\n\tmargin-left: 0;\n\tpadding: 0;\n}\n\nli {\n\tpadding: 0;\n}\n\nli:not(:last-child) {\n\tmargin-bottom: 0.5rem;\n}\n\na {\n\tposition: relative;\n}\n\na:before {\n\tcontent: '⇒';\n\tcolor: #999;\n\ttext-decoration: none;\n\tfont-weight: bold;\n\tposition: absolute;\n\tleft: -1.25rem;\n}\n\npre {\n\tbackground-color: #eee;\n\tmargin: 0 -1rem;\n\tpadding: 1rem;\n\toverflow-x: auto;\n}\n\ndetails:not([open]) summary,\ndetails:not([open]) summary a {\n\tcolor: gray;\n}\n\ndetails summary a:before {\n\tdisplay: none;\n}\n\ndl dt {\n\tfont-weight: bold;\n}\n\ndl dt:not(:first-child) {\n\tmargin-top: 0.5rem;\n}\n\n@media(prefers-color-scheme:dark) {\n\thtml {\n\t\tbackground-color: #111;\n\t\tcolor: #eee;\n\t}\n\n\tblockquote {\n\t\tbackground-color: #000;\n\t}\n\n\tpre {\n\t\tbackground-color: #222;\n\t}\n\n\ta {\n\t\tcolor: #0087BD;\n\t}\n\n\ta:visited {\n\t\tcolor: #333399;\n\t}\n}\n\nlabel {\n\tdisplay: block;\n\tfont-weight: bold;\n\tmargin-bottom: 0.5rem;\n}\n\ninput {\n\tdisplay: block;\n\tborder: 1px solid #888;\n\tpadding: .375rem;\n\tline-height: 1.25rem;\n\ttransition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;\n\twidth: 100%;\n}\n\ninput:focus {\n\toutline: 0;\n\tborder-color: #80bdff;\n\tbox-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);\n}\n</style>\n<title>A cool title 🪻</title>\n<body>\n"
         );
     }
     #[test]
@@ -286,7 +305,7 @@ mod tests {
         let html_content = format_gemini_to_html(parsed_gemini, title);
         assert_eq!(
             html_content,
-            "<!doctype html>\n<html>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n<title>some title</title>\n<body>\n<h2>heading2</h2>\n<ul>\n<li>tiny list</li>\n<pre>\npreformatted &amp;text\n</pre>\n<p>some infos</p></body>\n</html>\n"
+            "<!doctype html>\n<html>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n<style>\nhtml {\n\tfont-family: sans-serif;\n\tcolor: #080808;\n}\n\nbody {\n\tmax-width: 920px;\n\tmargin: 0 auto;\n\tpadding: 1rem 2rem;\n}\n\nblockquote {\n\tbackground-color: #eee;\n\tborder-left: 3px solid #444;\n\tmargin: 1rem -1rem 1rem calc(-1rem - 3px);\n\tpadding: 1rem;\n}\n\nul {\n\tmargin-left: 0;\n\tpadding: 0;\n}\n\nli {\n\tpadding: 0;\n}\n\nli:not(:last-child) {\n\tmargin-bottom: 0.5rem;\n}\n\na {\n\tposition: relative;\n}\n\na:before {\n\tcontent: '⇒';\n\tcolor: #999;\n\ttext-decoration: none;\n\tfont-weight: bold;\n\tposition: absolute;\n\tleft: -1.25rem;\n}\n\npre {\n\tbackground-color: #eee;\n\tmargin: 0 -1rem;\n\tpadding: 1rem;\n\toverflow-x: auto;\n}\n\ndetails:not([open]) summary,\ndetails:not([open]) summary a {\n\tcolor: gray;\n}\n\ndetails summary a:before {\n\tdisplay: none;\n}\n\ndl dt {\n\tfont-weight: bold;\n}\n\ndl dt:not(:first-child) {\n\tmargin-top: 0.5rem;\n}\n\n@media(prefers-color-scheme:dark) {\n\thtml {\n\t\tbackground-color: #111;\n\t\tcolor: #eee;\n\t}\n\n\tblockquote {\n\t\tbackground-color: #000;\n\t}\n\n\tpre {\n\t\tbackground-color: #222;\n\t}\n\n\ta {\n\t\tcolor: #0087BD;\n\t}\n\n\ta:visited {\n\t\tcolor: #333399;\n\t}\n}\n\nlabel {\n\tdisplay: block;\n\tfont-weight: bold;\n\tmargin-bottom: 0.5rem;\n}\n\ninput {\n\tdisplay: block;\n\tborder: 1px solid #888;\n\tpadding: .375rem;\n\tline-height: 1.25rem;\n\ttransition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;\n\twidth: 100%;\n}\n\ninput:focus {\n\toutline: 0;\n\tborder-color: #80bdff;\n\tbox-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);\n}\n</style>\n<title>some title</title>\n<body>\n<h2>heading2</h2>\n<ul>\n<li>tiny list</li>\n<pre>\npreformatted &amp;text\n</pre>\n<p>some infos</p></body>\n</html>\n"
         );
     }
     #[test]
@@ -310,7 +329,7 @@ mod tests {
         let htmled_link = html_link(simple_link_to_image);
         assert_eq!(
             htmled_link,
-            "<a href=\"protocol://fqdn/path.png\"><img src=\"protocol://fqdn/path.png\" alt=\"protocol://fqdn/path.png\" /></a><br />".to_string()
+            "<a href=\"protocol://fqdn/path.png\"><img loading=\"lazy\" height=\"200\" sizes=\"auto, (max-width: 30em) 100vw, (max-width: 50em) 50vw, calc(33vw - 100px)\" src=\"protocol://fqdn/path.png\" alt=\"protocol://fqdn/path.png\" /></a><br />".to_string()
         );
         // image with description
         let simple_link_to_image_with_description =
@@ -318,7 +337,7 @@ mod tests {
         let htmled_link = html_link(simple_link_to_image_with_description);
         assert_eq!(
             htmled_link,
-            "<a href=\"protocol://fqdn/path.png\"><img src=\"protocol://fqdn/path.png\" alt=\"some nice image description\" /></a><br />".to_string()
+            "<a href=\"protocol://fqdn/path.png\"><img loading=\"lazy\" height=\"200\" sizes=\"auto, (max-width: 30em) 100vw, (max-width: 50em) 50vw, calc(33vw - 100px)\" src=\"protocol://fqdn/path.png\" alt=\"some nice image description\" /></a><br />".to_string()
         );
         // first characters are spaces
         let simple_link_with_spaces = "    protocol://fqdn/path";

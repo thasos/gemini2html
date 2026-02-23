@@ -3,7 +3,7 @@ _default:
     just --list --unsorted
 
 run:
-    cargo run
+    cargo run ./tests ./output_tests
 # run test with cargo-insta
 test:
     cargo-insta test --review

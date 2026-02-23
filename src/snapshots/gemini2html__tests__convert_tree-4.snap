@@ -1,0 +1,14 @@
+---
+source: src/main.rs
+expression: content
+---
+<!doctype html>
+<html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>hello</title>
+<body>
+<h1>hello</h1>
+<p>I exists too !</p>
+<p>some infos</p></body>
+</html>

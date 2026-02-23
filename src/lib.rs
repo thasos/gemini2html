@@ -76,13 +76,14 @@ fn escaped_preformat_text(text: &str) -> String {
 /// Format a gimini link [+ description] to a html link `<a>` tag,
 /// if the link seems to point an image, format a `<img>` tag
 fn html_link(link: &str) -> String {
+    // trim start before split or description will be lost
+    let link = link.trim_start();
     // if a description is present, use it in <a> tag
     let (url, description) = match link.split_once(' ') {
         Some(splitted_link) => splitted_link,
         // if no description is provided, use the link as text
         None => (link, link),
     };
-
     // handle image
     // TODO no `<br \>` here, use css...
     let image_format =
@@ -144,9 +145,10 @@ fn write_to_file(path: &Path, content: &str) -> Result<()> {
 /// Main course here, read a gemini content line by line
 /// if a syntax element is found, store the line in the corresponding enum
 /// for lists and preformatted text, use flags for beginning and end tags
-fn parse_gemini(gemini_content: &str) -> Vec<ParsedGemini> {
+fn parse_gemini(gemini_content: &str) -> (Vec<ParsedGemini>, Option<&str>) {
     // init the Vec returned
     let mut parsed_gemini: Vec<ParsedGemini> = Vec::new();
+    let mut title: Option<&str> = None;
     // create flags for listes and preformatted text
     let mut flag_list = false;
     let mut flag_preformatted = false;
@@ -183,7 +185,10 @@ fn parse_gemini(gemini_content: &str) -> Vec<ParsedGemini> {
             // now we search if the first word match a syntax, and push the rest in output Vec
             match line_prefix {
                 "=>" => parsed_gemini.push(ParsedGemini::Link(line_rest.to_string())),
-                "#" => parsed_gemini.push(ParsedGemini::Heading1(line_rest.to_string())),
+                "#" => {
+                    title = Some(line_rest);
+                    parsed_gemini.push(ParsedGemini::Heading1(line_rest.to_string()))
+                }
                 "##" => parsed_gemini.push(ParsedGemini::Heading2(line_rest.to_string())),
                 "###" => parsed_gemini.push(ParsedGemini::Heading3(line_rest.to_string())),
                 // a list must begin with tag `<ul>` and start with `</ul>`
@@ -201,14 +206,14 @@ fn parse_gemini(gemini_content: &str) -> Vec<ParsedGemini> {
             }
         }
     }
-    parsed_gemini
+    (parsed_gemini, title)
 }
 
 /// Eat parsed gemini Vec, and create a formatted html page
-fn format_gemini_to_html(parsed_gemini: Vec<ParsedGemini>) -> String {
+fn format_gemini_to_html(parsed_gemini: Vec<ParsedGemini>, title: Option<&str>) -> String {
     let mut html_content = String::new();
     // init html main tags
-    let headers = html_headers(None);
+    let headers = html_headers(title);
     let footers = html_footers("some infos");
     // let's construct html document
     html_content.push_str(&headers);
@@ -226,13 +231,13 @@ fn format_gemini_to_html(parsed_gemini: Vec<ParsedGemini>) -> String {
 pub fn convert_gemini_file(gemini_file_path: &Path, target_file: &Path) -> Result<()> {
     match read_from_file(gemini_file_path) {
         Ok(gemini_file_content) => {
-            info!("🗃  start file {:?}", gemini_file_path);
-            let parsed_gemini = parse_gemini(&gemini_file_content);
-            info!("- 🍽️  parsed");
-            let html_content = format_gemini_to_html(parsed_gemini);
-            info!("- 🎨 converted to html");
+            info!("    - 🟢 start file {:?}", gemini_file_path);
+            let (parsed_gemini, title) = parse_gemini(&gemini_file_content);
+            info!("    - 🍽️  parsed");
+            let html_content = format_gemini_to_html(parsed_gemini, title);
+            info!("    - 🎨 converted to html");
             write_to_file(target_file, &html_content)?;
-            info!("- 🪦 html saved to file {:?}", target_file);
+            info!("    - 🪦 html saved to file {:?}", target_file);
         }
         Err(e) => error!("{}", e),
     }
@@ -242,6 +247,7 @@ pub fn convert_gemini_file(gemini_file_path: &Path, target_file: &Path) -> Resul
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
 
     #[test]
     fn test_html_headers_and_footers() {
@@ -260,15 +266,24 @@ mod tests {
         assert_eq!(escaped_line, "&amp;;\"🌳".to_string());
     }
     #[test]
-    fn test_read_from_file() {
-        let file_content = read_from_file(Path::new("./rust-toolchain.toml")).unwrap();
-        assert_eq!(file_content, "[toolchain]\nchannel = \"nightly\"\n");
+    fn test_write_and_read_file() {
+        let content = "some content";
+        let target_path = Path::new("./tests/target_file.test");
+        // write file
+        let write_result = write_to_file(target_path, content);
+        assert_eq!(write_result, Ok(()));
+        // read file
+        let file_content = read_from_file(Path::new("./tests/target_file.test")).unwrap();
+        assert_eq!(file_content, "some content");
+        // clean test file
+        fs::remove_file(target_path)
+            .expect("unable to delete test file (./tests/target_file.test)");
     }
     #[test]
     fn test_format_gemini_to_html() {
-        let parsed_gemini =
+        let (parsed_gemini, title) =
             parse_gemini("## heading2\n* tiny list\n```\npreformatted &text\n```\n");
-        let html_content = format_gemini_to_html(parsed_gemini);
+        let html_content = format_gemini_to_html(parsed_gemini, title);
         assert_eq!(
             html_content,
             "<!doctype html>\n<html>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n<title>some title</title>\n<body>\n<h2>heading2</h2>\n<ul>\n<li>tiny list</li>\n<pre>\npreformatted &amp;text\n</pre>\n<p>some infos</p></body>\n</html>\n"
@@ -305,7 +320,7 @@ mod tests {
             htmled_link,
             "<a href=\"protocol://fqdn/path.png\"><img src=\"protocol://fqdn/path.png\" alt=\"some nice image description\" /></a><br />".to_string()
         );
-        // spaces
+        // first characters are spaces
         let simple_link_with_spaces = "    protocol://fqdn/path";
         let htmled_link = html_link(simple_link_with_spaces);
         assert_eq!(

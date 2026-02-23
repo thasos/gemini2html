@@ -1,8 +1,12 @@
+---
+source: src/main.rs
+expression: content
+---
 <!doctype html>
 <html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>some title</title>
+<title>gemini example file</title>
 <body>
 <h1>gemini example file</h1>
 <p></p>
@@ -46,7 +50,7 @@ TODO QUOTE: At dawn, we plan !<br />
 <a href="https://geminiprotocol.net/docs/gemtext-specification.gmi">A link to the gemtext specification</a><br />
 <a href="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Screenshot_of_Amfora.png/960px-Screenshot_of_Amfora.png"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Screenshot_of_Amfora.png/960px-Screenshot_of_Amfora.png" alt="A link to an image" /></a><br />
 <a href="gemini://geminiprotocol.net/docs/gemtext-specification.gmi">A gemini link (you need a gemini browser)</a><br />
-<a href="">  gemini://geminiprotocol.net/docs/gemtext-specification.gmi A gemini link with spaces</a><br />
+<a href="gemini://geminiprotocol.net/docs/gemtext-specification.gmi">A gemini link with spaces</a><br />
 <a href="images/avatar.avif"><img src="images/avatar.avif" alt="A relative link to an AVIF image" /></a><br />
 <p></p>
 <h2>Another heading 2</h2>

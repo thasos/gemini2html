@@ -116,11 +116,9 @@ fn main() -> Result<(), Gemini2HtmlError> {
         .init();
     info!("🚀 start gemini2html");
     info!("---------------------");
-
     // read directory from args
     let args: Vec<String> = env::args().collect();
     let (source_tree_directory, target_tree_directory) = parse_args(&args)?;
-
     // source directory exists ?
     if source_tree_directory.is_dir() {
         // create target directory if not present
@@ -136,16 +134,12 @@ fn main() -> Result<(), Gemini2HtmlError> {
             "🚶 walking source directory {:?} and create tree 🌳",
             source_tree_directory
         );
+        // TODO target tree must no be in source, infinite loop...
         convert_tree(
             source_tree_directory,
             source_tree_directory,
             target_tree_directory,
         )?;
-
-        // let gemini_file = Path::new("./tests/gemini_file.gmi");
-        // let html_file = Path::new("./tests/html_file.html");
-        // // TODO handle result
-        // convert_gemini_file(gemini_file, html_file)?;
         info!("---------------------");
         info!("💤 end gemini2html");
         Ok(())
@@ -211,29 +205,4 @@ mod tests {
         assert_eq!(path1, "path1");
         assert_eq!(path2, "path2");
     }
-    // #[test]
-    // fn test_main() {
-    //     let source_tree_directory = Path::new("./tests");
-    //     let target_tree_directory = Path::new("./output_tests");
-    //     fs::remove_dir_all("./output_tests").expect("unable to purge old test dir ./output_tests");
-    //     fs::create_dir(target_tree_directory).expect("unable to create ./output_tests");
-    //     let _ = convert_tree(
-    //         source_tree_directory,
-    //         source_tree_directory,
-    //         target_tree_directory,
-    //     );
-    //     let files: Vec<&Path> = vec![
-    //         // ⛔ ⬇️
-    //         Path::new("./output_tests/gemini_file.html"),
-    //         Path::new("./output_tests/non_gemini_file.txt"),
-    //         Path::new("./output_tests/subdir/subfile.html"),
-    //         Path::new("./output_tests/subdir/subsubdir/subfile.html"),
-    //         // ⬇️  always append here, or it will break cargo insta snapshots order
-    //         // 🟢
-    //     ];
-    //     for file in files {
-    //         let content = fs::read_to_string(file).expect("unable to read file in ./output_tests");
-    //         assert_snapshot!(content);
-    //     }
-    // }
 }

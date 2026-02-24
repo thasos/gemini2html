@@ -160,11 +160,15 @@ TODO QUOTE: At dawn, we plan !<br />
 <p></p>
 <a href="https://wikipedia.org/wiki/Gemini_(protocol)">https://wikipedia.org/wiki/Gemini_(protocol)</a><br />
 <a href="https://upload.wikimedia.org/wikipedia/commons/0/0b/D%26D_Game_1.jpg"><img loading="lazy" height="200" sizes="auto, (max-width: 30em) 100vw, (max-width: 50em) 50vw, calc(33vw - 100px)" src="https://upload.wikimedia.org/wikipedia/commons/0/0b/D%26D_Game_1.jpg" alt="https://upload.wikimedia.org/wikipedia/commons/0/0b/D%26D_Game_1.jpg" /></a><br />
-<a href="https://geminiprotocol.net/docs/gemtext-specification.gmi">A link to the gemtext specification</a><br />
+<a href="gemini://geminiprotocol.net/docs/gemtext-specification.gmi">A link to the gemtext specification</a><br />
+<p>=>gemini://geminiprotocol.net This link works too</p>
 <a href="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Screenshot_of_Amfora.png/960px-Screenshot_of_Amfora.png"><img loading="lazy" height="200" sizes="auto, (max-width: 30em) 100vw, (max-width: 50em) 50vw, calc(33vw - 100px)" src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Screenshot_of_Amfora.png/960px-Screenshot_of_Amfora.png" alt="A link to an image" /></a><br />
 <a href="gemini://geminiprotocol.net/docs/gemtext-specification.gmi">A gemini link (you need a gemini browser)</a><br />
 <a href="gemini://geminiprotocol.net/docs/gemtext-specification.gmi">A gemini link with spaces</a><br />
 <a href="images/avatar.avif"><img loading="lazy" height="200" sizes="auto, (max-width: 30em) 100vw, (max-width: 50em) 50vw, calc(33vw - 100px)" src="images/avatar.avif" alt="A relative link to an AVIF image" /></a><br />
+<a href="./subdir/subfile.html">A relative local link to a gemini file</a><br />
+<a href="subdir/subsubdir/subfile.html">A relative local link to a gemini file</a><br />
+<a href="subdir/non_gemini_file.txt">A relative local link to a non gemini file</a><br />
 <p></p>
 <h2>Another heading 2</h2>
 <h2>The last  heading 2</h2>

@@ -100,8 +100,8 @@ fn html_link(link: &str) -> String {
         // if no description is provided, use the link as text
         None => (link, link),
     };
+    // `gemini://geminiprotocol.net/docs/gemtext-specification.gmi A link...`
     // handle image
-    // TODO no `<br \>` here, use css...
     let image_html_options = r#"loading="lazy" height="200" sizes="auto, (max-width: 30em) 100vw, (max-width: 50em) 50vw, calc(33vw - 100px)""#;
     // let image_html_options = r#"loading="lazy" width="200" height="200" sizes="auto, (max-width: 30em) 100vw, (max-width: 50em) 50vw, calc(33vw - 100px)""#;
     let image_format = format!(
@@ -109,9 +109,9 @@ fn html_link(link: &str) -> String {
     );
     let standard_link_format = format!("<a href=\"{url}\">{description}</a><br />");
     // try to match a known image extension
-    // TODO downcase
+    // and if gmi file, convert local files to html
     match url.rsplit_once('.') {
-        Some((_reste, extension)) => match extension {
+        Some((_reste, extension)) => match extension.to_lowercase().as_str() {
             "jpg" => image_format,
             "png" => image_format,
             "gif" => image_format,
@@ -121,6 +121,15 @@ fn html_link(link: &str) -> String {
             "jpeg" => image_format,
             "svg" => image_format,
             "avif" => image_format,
+            "gmi" => {
+                let url = if url.contains("gemini://") {
+                    url
+                } else {
+                    &url.replace(".gmi", ".html")
+                };
+                // TODO create a fonction instead use image_format/standard_link_format
+                format!("<a href=\"{url}\">{description}</a><br />")
+            }
             // unknown extension : standard link
             _ => standard_link_format,
         },
@@ -153,7 +162,6 @@ fn write_to_file(path: &Path, content: &str) -> Result<()> {
         error!("unable to open file {} : {e:?}", path.to_string_lossy());
         Gemini2HtmlError
     })?;
-    // TODO handle result
     file.write_all(content.as_bytes()).map_err(|e| {
         error!("unable to write to file {} : {e:?}", path.to_string_lossy());
         Gemini2HtmlError
@@ -202,6 +210,8 @@ fn parse_gemini(gemini_content: &str) -> (Vec<ParsedGemini>, Option<&str>) {
             }
 
             // now we search if the first word match a syntax, and push the rest in output Vec
+            // FIXME space is not needed : `=>Link a description` is valid...
+            // same for quotes `>some quote`
             match line_prefix {
                 "=>" => parsed_gemini.push(ParsedGemini::Link(line_rest.to_string())),
                 "#" => {

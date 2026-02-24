@@ -33,11 +33,15 @@ Following, a link without description, and an image without description
 
 => https://wikipedia.org/wiki/Gemini_(protocol)
 => https://upload.wikimedia.org/wikipedia/commons/0/0b/D%26D_Game_1.jpg
-=> https://geminiprotocol.net/docs/gemtext-specification.gmi A link to the gemtext specification
+=> gemini://geminiprotocol.net/docs/gemtext-specification.gmi A link to the gemtext specification
+=>gemini://geminiprotocol.net This link works too
 => https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Screenshot_of_Amfora.png/960px-Screenshot_of_Amfora.png A link to an image
 => gemini://geminiprotocol.net/docs/gemtext-specification.gmi A gemini link (you need a gemini browser)
 =>    gemini://geminiprotocol.net/docs/gemtext-specification.gmi A gemini link with spaces
 => images/avatar.avif A relative link to an AVIF image
+=> ./subdir/subfile.gmi A relative local link to a gemini file
+=> subdir/subsubdir/subfile.gmi A relative local link to a gemini file
+=> subdir/non_gemini_file.txt A relative local link to a non gemini file
 
 ## Another heading 2
 ## The last  heading 2

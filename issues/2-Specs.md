@@ -1,4 +1,5 @@
 # 2. 📝 Specs
+📅 2026-03-19 21:35
 
 ## Cli
 - addon git ? Bof, 100% autonome c'est mieux

@@ -1,6 +1,10 @@
 # Issues
 
-## Issues list
+Create a new issue :
+- with [my super project](some.url) : `toto new issue-title`
+- with git : just create a new file in issues `issue-title.md`
+
+## List
 
 | Status | Id | Description | Date | Comment number |
 |--------|----|     --------|------|----------------|
